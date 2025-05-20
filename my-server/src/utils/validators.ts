@@ -7,7 +7,13 @@
  * @param date Date to check
  * @returns True if the date is valid, false otherwise
  */
-export const isValidDate = (date: Date): boolean => {
+export const isValidDate = (date: Date | string): boolean => {
+  if (typeof date === "string") {
+    // ISO 문자열이나 다른 형식의 문자열로부터 Date 객체 생성 시도
+    const parsedDate = new Date(date);
+    return !isNaN(parsedDate.getTime());
+  }
+  
   return date instanceof Date && !isNaN(date.getTime());
 };
 
