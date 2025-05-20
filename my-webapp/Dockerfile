@@ -1,5 +1,5 @@
 # 개발 환경
-FROM node:16 as development
+FROM node:18 as development
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -8,7 +8,7 @@ EXPOSE 3000
 CMD ["npm", "start"]
 
 # 프로덕션 빌드
-FROM node:16 as build
+FROM node:18 as build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install

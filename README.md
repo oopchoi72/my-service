@@ -14,20 +14,21 @@
 
 ### 프론트엔드
 
-- React.js
+- React.js (v18.2)
 - TypeScript
-- Tailwind CSS
-- React Router DOM
+- Tailwind CSS (v3.3)
+- React Router DOM (v6.22)
 - Axios
 - date-fns (날짜 관리)
 
 ### 백엔드
 
-- Node.js
+- Node.js (v18+)
 - Express.js
 - TypeScript
 - MongoDB & Mongoose
 - RESTful API
+- 표준화된 API 응답 처리
 
 ### 개발 및 배포 환경
 
@@ -39,7 +40,35 @@
 ### 사전 요구사항
 
 - Docker 및 Docker Compose 설치
-- Node.js 및 npm 설치 (로컬 개발 시)
+- Node.js 18 이상 및 npm 설치 (로컬 개발 시)
+
+### 환경 변수 설정
+
+프로젝트는 환경 변수를 통해 설정할 수 있습니다. `.env.example` 파일을 참고하여 필요한 환경 변수를 설정하세요.
+
+1. 개발 환경용 환경 변수 설정
+
+```bash
+# .env.development 파일 생성 또는 수정
+cp .env.example .env.development
+# 필요한 설정 수정
+```
+
+2. 프로덕션 환경용 환경 변수 설정
+
+```bash
+# .env.production 파일 생성 또는 수정
+cp .env.example .env.production
+# 필요한 설정 수정 (특히 보안 관련 설정)
+```
+
+**주요 환경 변수**:
+
+- `PORT`: 백엔드 서버 포트 (기본값: 5000)
+- `BACKEND_PORT`: 호스트에서 백엔드에 접근할 포트 (기본값: 5001, 개발환경)
+- `FRONTEND_PORT`: 프로덕션 환경에서 프론트엔드에 접근할 포트 (기본값: 80)
+- `MONGO_USERNAME` / `MONGO_PASSWORD`: MongoDB 인증 정보 (프로덕션 환경)
+- `REACT_APP_API_URL`: 프론트엔드에서 백엔드 API에 접근할 URL
 
 ### Docker를 사용한 실행 (권장)
 
@@ -60,6 +89,16 @@ docker-compose up
 
 ```bash
 docker-compose -f docker-compose.prod.yml up
+```
+
+4. 환경 변수를 변경하여 포트 충돌 해결 (필요시)
+
+```bash
+# .env.development 파일에서 포트 변경
+BACKEND_PORT=5002  # 다른 포트로 변경
+
+# 변경된 설정으로 실행
+docker-compose up
 ```
 
 ### 로컬 개발 환경에서 개별 실행
@@ -166,6 +205,8 @@ flowchart TD
    - Express.js 기반의 RESTful API
    - 비즈니스 로직 처리 및 데이터베이스 액세스
    - 컨트롤러-라우터-모델 구조로 관심사 분리
+   - 표준화된 API 응답 형식과 오류 처리
+   - 환경 변수 기반 구성으로 유연한 배포 지원
 
 3. **데이터베이스**
    - MongoDB (NoSQL 데이터베이스)
@@ -178,6 +219,36 @@ flowchart TD
 - `POST /api/events` - 새 일정 생성
 - `PUT /api/events/:id` - 기존 일정 수정
 - `DELETE /api/events/:id` - 일정 삭제
+
+### API 응답 형식
+
+모든 API 응답은 다음과 같은 표준화된 형식을 따릅니다:
+
+#### 성공 응답
+
+```json
+{
+  "success": true,
+  "data": { ... },  // 응답 데이터
+  "count": 10       // 데이터가 배열인 경우 항목 수 (선택 사항)
+}
+```
+
+#### 오류 응답
+
+```json
+{
+  "success": false,
+  "error": "오류 메시지" // 문자열 또는 문자열 배열
+}
+```
+
+HTTP 상태 코드:
+- 200: 성공적인 요청
+- 201: 리소스 생성 성공
+- 400: 잘못된 요청 (클라이언트 오류)
+- 404: 리소스를 찾을 수 없음
+- 500: 서버 오류
 
 ## 라이선스
 

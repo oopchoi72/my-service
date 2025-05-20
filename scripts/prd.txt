@@ -1,95 +1,61 @@
-<context>
-# Overview  
-심플 캘린더는 달력 기반의 직관적인 일정 관리 웹 애플리케이션입니다. 사용자가 쉽고 빠르게 일정을 등록하고 관리할 수 있으며, 심플한 UI와 반응형 디자인으로 PC와 모바일 모두에서 최적의 사용자 경험을 제공합니다.
+# 일정 관리 웹 서비스 현황 및 문제 분석
 
-# Core Features  
-- 월간 달력 기본 화면: 현재 월 표시 및 월 이동 기능으로 직관적인 시간 탐색
-- 일정 등록: 날짜 클릭 시 모달로 제목, 날짜/시간, 설명 입력 가능
-- 일정 표시: 등록된 일정은 달력에 제목 형태로 표시되어 한눈에 확인 가능
-- 일정 상세 관리: 클릭 시 상세 모달에서 내용 확인, 수정, 삭제 가능
-- 반응형 UI: 모바일, 태블릿, 데스크톱 등 다양한 디바이스에서 최적화된 화면 제공
+## 개요  
+이 문서는 현재 개발 중인 일정 관리 웹 서비스에서 발생한 문제점들을 분석하고 해결 방안을 제시합니다. 기존에 15개의 태스크로 구성된 프로젝트에 추가 작업이 필요한 부분을 식별하고, 이를 새로운 태스크로 정의합니다.
 
-# User Experience  
-- 사용자 페르소나: 디지털 일정 관리가 필요한 직장인, 학생, 프리랜서
-- 주요 사용자 흐름:
-  1. 월간 달력에서 날짜 확인
-  2. 빈 날짜 클릭하여 일정 추가
-  3. 기존 일정 클릭하여 상세 확인 및 수정/삭제
-- UI/UX 고려사항: 미니멀 디자인, 직관적인 인터페이스, 최소한의 클릭으로 작업 완료
-</context>
-<PRD>
-# Technical Architecture  
-- 시스템 구성:
-  - 프론트엔드: React.js, TypeScript, Tailwind CSS
-  - 백엔드: Node.js, Express.js, MongoDB
-  - API: RESTful JSON
-- 데이터 모델:
-  ```ts
-  {
-    _id: ObjectId,
-    title: string,
-    startDateTime: Date,
-    endDateTime?: Date,
-    description?: string,
-    createdAt: Date,
-    updatedAt: Date
-  }
-  ```
-- API 명세:
-  - GET /api/events?month=YYYY-MM: 월별 일정 조회
-  - POST /api/events: 일정 등록
-  - GET /api/events/:id: 일정 상세 조회
-  - PUT /api/events/:id: 일정 수정
-  - DELETE /api/events/:id: 일정 삭제
-- 인프라 요구사항:
-  - Docker 기반 로컬 개발 환경
-  - MongoDB 데이터베이스
-  - Node.js 런타임 환경
+## 현재 발생한 문제점 및 원인 분석
+1. **Node.js 버전 불일치**
+   - 프론트엔드 패키지(React, React Router, Testing Library 등)에서 Node.js 18 이상을 요구하나, 도커 이미지에서는 Node.js 16을 사용
+   - npm 경고 및 비호환성 메시지 발생 중
 
-# Development Roadmap  
-- MVP 요구사항:
-  1. 기본 UI 구성: 월간 달력 표시 및 탐색
-  2. 일정 등록 기능: 날짜 클릭 시 모달로 정보 입력
-  3. 일정 표시 기능: 달력에 등록된 일정 제목 표시
-  4. 일정 상세 보기: 모달로 일정 정보 상세 표시
-  5. 기본 CRUD 기능: 일정 조회, 수정, 삭제 API 연동
-- 향후 개선사항:
-  1. 로그인 및 사용자별 일정 기능
-  2. 일정 반복 및 알림 기능
-  3. 일정 색상 태그 및 카테고리 기능
-  4. 캘린더 공유 및 협업 기능
-  5. 다양한 캘린더 뷰(주간, 일간) 추가
+2. **Tailwind CSS 구성 오류**
+   - `@tailwindcss/postcss` 패키지가 없거나 호환되지 않는 버전 사용
+   - Tailwind CSS 버전 충돌 (postcss.config.js에서 참조 방식 오류)
+   - tailwind.config.js 제거로 인한 설정 누락
 
-# Logical Dependency Chain
-- 기초 개발 순서:
-  1. 프로젝트 구조 및 개발 환경 설정
-  2. 프론트엔드 달력 UI 컴포넌트 구현
-  3. 백엔드 기본 API 설계 및 구현
-  4. 프론트엔드-백엔드 연동 및 기본 CRUD 기능 테스트
-  5. 반응형 디자인 및 사용자 경험 개선
-- 진행 방식:
-  1. 초기 단계에서 스태틱 달력 UI 구현으로 사용 가능한 화면 빠르게 개발
-  2. 백엔드 연동 전 로컬 상태로 기능 검증
-  3. 각 기능은 독립적으로 개발하여 점진적으로 통합
+3. **백엔드 컨트롤러 타입 오류**
+   - Express 컨트롤러 함수에서 반환 타입 불일치 (void vs Promise<Response>)
+   - 응답 처리 방식 일관성 부족
 
-# Risks and Mitigations  
-- 기술적 도전:
-  - 복잡한 달력 UI 구현: 외부 라이브러리(date-fns) 활용으로 해결
-  - 시간대 처리: 서버 및 클라이언트 간 일관된 시간대 처리 로직 구현
-- MVP 범위:
-  - 핵심 기능인 월간 달력과 기본 CRUD에 집중
-  - 사용자 인증 등 부가 기능은 MVP 이후로 연기
-- 자원 제약:
-  - 최소 필수 기능으로 구성된 MVP 우선 개발
-  - 컴포넌트 재사용으로 개발 효율성 높임
+4. **도커 컨테이너 포트 충돌**
+   - 백엔드 서비스가 기본 포트 5000을 사용하지만 이미 사용 중인 경우 발생
+   - 환경 변수를 통한 포트 구성이 없음
 
-# Appendix  
-- 기술 스택 상세:
-  - 프론트엔드: React.js, TypeScript, Tailwind CSS, dayjs/date-fns
-  - 백엔드: Node.js, Express.js, TypeScript, MongoDB, Mongoose
-  - 개발 도구: Docker, Jest, GitHub Actions
-- 디자인 가이드라인:
-  - 폰트: Pretendard, Noto Sans 또는 시스템 폰트
-  - 색상: 깔끔한 흰색 배경, 파스텔 톤 포인트 컬러
-  - 컴포넌트: 일관된 디자인 시스템 적용
-</PRD>
+5. **패키지 의존성 경고 및 취약점**
+   - 다수의 deprecated 패키지 사용
+   - npm audit에서 보안 취약점 발견 (2 중간, 6 높음)
+
+## 해결 방안 및 구현 계획
+
+1. **Node.js 버전 업그레이드**
+   - 도커 이미지를 Node.js 18 이상으로 업그레이드
+   - 프론트엔드와 백엔드 Dockerfile 수정
+   - 패키지 호환성 확인 및 필요시 업데이트
+
+2. **Tailwind CSS 구성 수정**
+   - 최신 버전의 Tailwind CSS로 업그레이드
+   - 올바른 설정 파일 구성 (postcss.config.js 및 tailwind.config.js)
+   - Tailwind 디렉티브 확인 및 수정
+
+3. **백엔드 컨트롤러 개선**
+   - 모든 컨트롤러 함수의 반환 타입 통일
+   - 일관된 응답 처리 패턴 적용
+   - 오류 처리 개선
+
+4. **도커 환경 구성 개선**
+   - 환경 변수를 통한 포트 구성 지원
+   - .env 파일 및 docker-compose 파일 수정
+   - 포트 충돌 방지 메커니즘 구현
+
+5. **의존성 관리 및 보안 강화**
+   - 취약한 패키지 업데이트
+   - 불필요한 의존성 제거
+   - npm audit 문제 해결
+
+## 필요 작업 목록
+
+1. Node.js 버전 업그레이드 및 패키지 호환성 확인
+2. Tailwind CSS 설정 복구 및 최적화
+3. 백엔드 컨트롤러 타입 및 응답 처리 개선
+4. 도커 환경 변수 기반 구성으로 전환
+5. 의존성 업데이트 및 보안 취약점 해결

@@ -1,16 +1,14 @@
 import { Request, Response } from "express";
 import Event from "../models/Event";
+import { sendSuccess, sendError, handleValidationError } from "../utils/apiResponse";
 
 // 월별 일정 조회
-export const getEvents = async (req: Request, res: Response) => {
+export const getEvents = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { month, year } = req.query;
 
     if (!month || !year) {
-      return res.status(400).json({
-        success: false,
-        error: "월과 연도를 쿼리 파라미터로 제공해야 합니다",
-      });
+      return sendError(res, "월과 연도를 쿼리 파라미터로 제공해야 합니다", 400);
     }
 
     const monthNum = parseInt(month as string, 10);
@@ -31,73 +29,51 @@ export const getEvents = async (req: Request, res: Response) => {
       ],
     }).sort({ startDate: 1 });
 
-    res.status(200).json({
-      success: true,
-      count: events.length,
-      data: events,
-    });
+    return sendSuccess(res, events, 200, events.length);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: "서버 오류가 발생했습니다",
-    });
+    return sendError(res, "서버 오류가 발생했습니다", 500);
   }
 };
 
 // 특정 일정 상세 조회
-export const getEventById = async (req: Request, res: Response) => {
+export const getEventById = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const event = await Event.findById(req.params.id);
 
     if (!event) {
-      return res.status(404).json({
-        success: false,
-        error: "일정을 찾을 수 없습니다",
-      });
+      return sendError(res, "일정을 찾을 수 없습니다", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      data: event,
-    });
+    return sendSuccess(res, event);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: "서버 오류가 발생했습니다",
-    });
+    return sendError(res, "서버 오류가 발생했습니다", 500);
   }
 };
 
 // 새 일정 생성
-export const createEvent = async (req: Request, res: Response) => {
+export const createEvent = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const event = await Event.create(req.body);
-
-    res.status(201).json({
-      success: true,
-      data: event,
-    });
+    return sendSuccess(res, event, 201);
   } catch (error: any) {
     if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map(
-        (val: any) => val.message
-      );
-
-      return res.status(400).json({
-        success: false,
-        error: messages,
-      });
+      return handleValidationError(res, error);
     }
-
-    res.status(500).json({
-      success: false,
-      error: "서버 오류가 발생했습니다",
-    });
+    return sendError(res, "서버 오류가 발생했습니다", 500);
   }
 };
 
 // 일정 수정
-export const updateEvent = async (req: Request, res: Response) => {
+export const updateEvent = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const event = await Event.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -105,55 +81,32 @@ export const updateEvent = async (req: Request, res: Response) => {
     });
 
     if (!event) {
-      return res.status(404).json({
-        success: false,
-        error: "일정을 찾을 수 없습니다",
-      });
+      return sendError(res, "일정을 찾을 수 없습니다", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      data: event,
-    });
+    return sendSuccess(res, event);
   } catch (error: any) {
     if (error.name === "ValidationError") {
-      const messages = Object.values(error.errors).map(
-        (val: any) => val.message
-      );
-
-      return res.status(400).json({
-        success: false,
-        error: messages,
-      });
+      return handleValidationError(res, error);
     }
-
-    res.status(500).json({
-      success: false,
-      error: "서버 오류가 발생했습니다",
-    });
+    return sendError(res, "서버 오류가 발생했습니다", 500);
   }
 };
 
 // 일정 삭제
-export const deleteEvent = async (req: Request, res: Response) => {
+export const deleteEvent = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const event = await Event.findByIdAndDelete(req.params.id);
 
     if (!event) {
-      return res.status(404).json({
-        success: false,
-        error: "일정을 찾을 수 없습니다",
-      });
+      return sendError(res, "일정을 찾을 수 없습니다", 404);
     }
 
-    res.status(200).json({
-      success: true,
-      data: {},
-    });
+    return sendSuccess(res, {});
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: "서버 오류가 발생했습니다",
-    });
+    return sendError(res, "서버 오류가 발생했습니다", 500);
   }
 };
