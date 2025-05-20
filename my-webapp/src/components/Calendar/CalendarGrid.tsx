@@ -19,7 +19,13 @@ interface CalendarGridProps extends BaseProps {
   onDateClick?: (date: Date) => void;
   onEventClick?: (eventId: string) => void;
   events?: Event[];
+  maxEventsPerDay?: number;
 }
+
+// 색상 배열 - 이벤트에 고유한 색상 할당을 위해 사용
+const EVENT_COLORS = [
+  "blue", "green", "purple", "red", "yellow", "indigo", "pink"
+];
 
 /**
  * 캘린더 그리드 컴포넌트
@@ -30,6 +36,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   onDateClick,
   onEventClick,
   events = [],
+  maxEventsPerDay = 3,
   className = "",
   ...props
 }) => {
@@ -52,11 +59,25 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   // 현재 월의 모든 날짜
   const daysInMonth = getDaysInMonth(currentDate);
 
-  // 특정 날짜의 이벤트 필터링
-  const getEventsForDate = (date: Date): Event[] => {
-    return events.filter((event) => {
+  // 특정 날짜의 이벤트 필터링 및 색상 할당
+  const getEventsForDate = (date: Date): { id: string; title: string; color: string }[] => {
+    const dateEvents = events.filter((event) => {
       const eventDate = new Date(event.startDateTime);
       return isSameDay(eventDate, date);
+    });
+
+    // 이벤트에 색상 할당 (고유한 이벤트 ID를 사용하여 일관된 색상 할당)
+    return dateEvents.map((event) => {
+      // 간단한 해시 함수로 이벤트 ID에 따라 일관된 색상 할당
+      const colorIndex = Math.abs(
+        event.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+      ) % EVENT_COLORS.length;
+      
+      return {
+        id: event.id,
+        title: event.title,
+        color: EVENT_COLORS[colorIndex]
+      };
     });
   };
 
@@ -83,6 +104,20 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
 
   return (
     <div className={`calendar-grid ${className}`} {...props}>
+      {/* 요일 헤더 */}
+      <div className="grid grid-cols-7 text-center text-xs sm:text-sm text-gray-500 font-medium mb-1 sm:mb-2">
+        {["일", "월", "화", "수", "목", "금", "토"].map((day, index) => (
+          <div
+            key={index}
+            className={`py-1 sm:py-2 ${index === 0 ? "text-red-500" : ""} ${
+              index === 6 ? "text-indigo-500" : ""
+            }`}
+          >
+            {day}
+          </div>
+        ))}
+      </div>
+
       {/* 날짜 그리드 (주 단위로 렌더링) */}
       <div className="grid gap-0.5 sm:gap-1.5">
         {weeksInMonth.map((week, weekIndex) => (
@@ -91,11 +126,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
               // 현재 월인지 여부 확인
               const isCurrentMonth = isSameMonth(date, currentDate);
 
-              // 해당 날짜의 이벤트 필터링
-              const dateEvents = getEventsForDate(date).map((event) => ({
-                id: event.id,
-                title: event.title,
-              }));
+              // 해당 날짜의 이벤트 필터링 및 색상 할당
+              const dateEvents = getEventsForDate(date);
 
               return (
                 <CalendarDay
@@ -105,6 +137,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                   events={dateEvents}
                   onClick={() => onDateClick?.(date)}
                   onEventClick={onEventClick}
+                  maxVisibleEvents={maxEventsPerDay}
                 />
               );
             })}
