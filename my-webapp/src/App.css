@@ -36,3 +36,97 @@
     transform: rotate(360deg);
   }
 }
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* 캘린더 스타일 */
+.calendar-container {
+  transition: all 0.3s ease;
+}
+
+.calendar-container:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.day-cell {
+  transition: all 0.2s ease;
+}
+
+.day-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 이벤트 스타일 */
+.day-cell .event {
+  transition: all 0.2s ease;
+}
+
+.day-cell .event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* 반응형 미디어 쿼리 */
+@media (max-width: 640px) {
+  .day-cell {
+    font-size: 0.75rem;
+  }
+
+  .day-cell:hover {
+    transform: none;
+  }
+
+  .day-cell .event {
+    padding: 0.1rem 0.25rem;
+    margin-bottom: 0.1rem;
+  }
+
+  /* 모바일에서는 마우스 호버 대신 터치 효과를 강조 */
+  .day-cell:active {
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+
+  /* 모바일에서 드롭다운 위치 조정 */
+  .calendar-header .dropdown {
+    left: 0;
+    width: 100%;
+  }
+}
+
+/* 태블릿 크기 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .day-cell {
+    min-height: 80px;
+  }
+
+  .day-cell .event {
+    font-size: 0.7rem;
+  }
+}
+
+/* 대형 화면 최적화 */
+@media (min-width: 1281px) {
+  .calendar-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .day-cell {
+    min-height: 120px;
+  }
+}
