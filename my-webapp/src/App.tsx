@@ -3,8 +3,14 @@ import Layout from "./components/common/Layout";
 import Header from "./components/common/Header";
 import Calendar from "./components/Calendar/Calendar";
 import EventModal from "./components/EventModal/EventModal";
-import { QueryErrorBoundary, RetryIndicator } from "./components/common";
-import { Event } from "./types";
+import {
+  QueryErrorBoundary,
+  RetryIndicator,
+  Spinner,
+} from "./components/common";
+import { CreateEventDto, Event, UpdateEventDto } from "./types";
+import { useEvents, useEventMutation } from "./hooks";
+import { format } from "date-fns";
 import "./App.css";
 
 /**
@@ -16,29 +22,17 @@ function App() {
     isOpen: false,
     mode: "create" as "create" | "edit" | "view",
     eventId: "",
+    selectedDate: new Date(),
   });
 
-  // 테스트용 이벤트 데이터
-  const [events, setEvents] = useState<Event[]>([
-    {
-      id: "1",
-      title: "데모 이벤트 1",
-      startDateTime: new Date().toISOString(),
-      description: "테스트용 이벤트 설명입니다.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      title: "데모 이벤트 2",
-      startDateTime: new Date(
-        new Date().setDate(new Date().getDate() + 2)
-      ).toISOString(),
-      description: "테스트용 두 번째 이벤트입니다.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ]);
+  // API 연동을 위한 훅 사용
+  const { events, loading: isLoadingEvents, error: eventsError } = useEvents();
+  const {
+    createEvent,
+    updateEvent,
+    deleteEvent,
+    loading: isMutating,
+  } = useEventMutation();
 
   // 새 일정 추가 핸들러
   const handleAddEvent = () => {
@@ -46,6 +40,7 @@ function App() {
       isOpen: true,
       mode: "create",
       eventId: "",
+      selectedDate: new Date(),
     });
   };
 
@@ -55,6 +50,7 @@ function App() {
       isOpen: true,
       mode: "create",
       eventId: "",
+      selectedDate: date,
     });
   };
 
@@ -64,6 +60,7 @@ function App() {
       isOpen: true,
       mode: "view",
       eventId,
+      selectedDate: new Date(),
     });
   };
 
@@ -72,6 +69,49 @@ function App() {
     setModalState((prev) => ({
       ...prev,
       isOpen: false,
+    }));
+  };
+
+  // 이벤트 저장 핸들러
+  const handleSaveEvent = async (data: CreateEventDto | UpdateEventDto) => {
+    try {
+      if (modalState.mode === "create") {
+        // 선택된 날짜가 있으면 시작 일시에 반영
+        const eventData: CreateEventDto = {
+          ...(data as CreateEventDto),
+          // 사용자가 시작 일시를 지정하지 않았다면 선택된 날짜 사용
+          startDateTime:
+            data.startDateTime ||
+            format(modalState.selectedDate, "yyyy-MM-dd'T'HH:mm"),
+        };
+        await createEvent(eventData);
+      } else if (modalState.mode === "edit" && modalState.eventId) {
+        await updateEvent(modalState.eventId, data as UpdateEventDto);
+      }
+
+      handleCloseModal();
+    } catch (error) {
+      console.error("이벤트 저장 중 오류 발생:", error);
+    }
+  };
+
+  // 이벤트 삭제 핸들러
+  const handleDeleteEvent = async () => {
+    try {
+      if (modalState.eventId) {
+        await deleteEvent(modalState.eventId);
+        handleCloseModal();
+      }
+    } catch (error) {
+      console.error("이벤트 삭제 중 오류 발생:", error);
+    }
+  };
+
+  // 이벤트 수정 모드 전환 핸들러
+  const handleEditEvent = () => {
+    setModalState((prev) => ({
+      ...prev,
+      mode: "edit",
     }));
   };
 
@@ -88,12 +128,24 @@ function App() {
       >
         <div className="container mx-auto py-6">
           <div className="max-w-5xl mx-auto">
-            <Calendar
-              events={events}
-              onDateClick={handleDateClick}
-              onEventClick={handleEventClick}
-              className="transform transition-all hover:scale-[1.01]"
-            />
+            {isLoadingEvents ? (
+              <div className="h-96 flex items-center justify-center">
+                <Spinner size="lg" />
+              </div>
+            ) : eventsError ? (
+              <div className="h-96 flex items-center justify-center">
+                <p className="text-red-500">
+                  이벤트를 불러오는 중 오류가 발생했습니다.
+                </p>
+              </div>
+            ) : (
+              <Calendar
+                events={events}
+                onDateClick={handleDateClick}
+                onEventClick={handleEventClick}
+                className="transform transition-all hover:scale-[1.01]"
+              />
+            )}
           </div>
         </div>
 
@@ -102,15 +154,11 @@ function App() {
           isOpen={modalState.isOpen}
           onClose={handleCloseModal}
           mode={modalState.mode}
-          event={events.find((e) => e.id === modalState.eventId)}
-          onSave={(data) => {
-            console.log("저장된 데이터:", data);
-            handleCloseModal();
-          }}
-          onDelete={() => {
-            console.log("이벤트 삭제:", modalState.eventId);
-            handleCloseModal();
-          }}
+          event={events?.find((e) => e.id === modalState.eventId)}
+          onSave={handleSaveEvent}
+          onDelete={handleDeleteEvent}
+          isSaving={isMutating}
+          isDeleting={isMutating}
         />
 
         {/* 재시도 표시기 */}
