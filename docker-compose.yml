@@ -7,7 +7,6 @@ services:
       target: development
     volumes:
       - ./my-webapp:/app
-      - /app/node_modules
     ports:
       - "3000:3000"
     depends_on:
@@ -15,24 +14,44 @@ services:
     env_file:
       - .env.development
     environment:
+      - PORT=3000
       - REACT_APP_API_URL=http://localhost:${BACKEND_PORT:-5001}/api
+      - NODE_OPTIONS=--openssl-legacy-provider
+      - SKIP_PREFLIGHT_CHECK=true
+      - GENERATE_SOURCEMAP=false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   backend:
-    build: ./my-server
+    build:
+      context: ./my-server
+      target: development
     volumes:
       - ./my-server:/app
-      - /app/node_modules
     ports:
       - "${BACKEND_PORT:-5001}:${PORT:-5000}"
     env_file:
       - .env.development
     environment:
       - NODE_ENV=development
-      - MONGO_URI=mongodb://mongo:27017/calendar-app
+      - MONGO_URI=mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-password}@mongo:27017/calendar-app?authSource=admin
       - PORT=${PORT:-5000}
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
     command: npm run dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-5000}/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   mongo:
     image: mongo
@@ -40,6 +59,16 @@ services:
       - mongo-data:/data/db
     ports:
       - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-password}
+    restart: unless-stopped
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/calendar-app --quiet --username ${MONGO_USERNAME:-admin} --password ${MONGO_PASSWORD:-password} --authenticationDatabase admin
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
 volumes:
   mongo-data:
