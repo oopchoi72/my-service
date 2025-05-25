@@ -183,24 +183,6 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           ))}
         </div>
       )}
-
-      {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 gap-1 border-b border-gray-200 pb-2 mb-1">
-        {["일", "월", "화", "수", "목", "금", "토"].map((day, i) => (
-          <div
-            key={day}
-            className={`text-center text-xs sm:text-sm font-medium ${
-              i === 0
-                ? "text-red-500"
-                : i === 6
-                ? "text-indigo-500"
-                : "text-gray-700"
-            }`}
-          >
-            {day}
-          </div>
-        ))}
-      </div>
     </div>
   );
 };

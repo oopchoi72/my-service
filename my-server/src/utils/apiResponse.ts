@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response } from "express";
 
 // API 응답 인터페이스
 export interface ApiResponse<T> {
@@ -20,17 +20,33 @@ export const sendSuccess = <T>(
   data: T,
   statusCode: number = 200,
   count?: number
-): Response<ApiResponse<T>> => {
+): void => {
   const response: ApiResponse<T> = {
     success: true,
-    data
+    data,
   };
 
   if (count !== undefined) {
     response.count = count;
   }
 
-  return res.status(statusCode).json(response);
+  res.status(statusCode).json(response);
+};
+
+/**
+ * 일반 응답 유틸리티 함수
+ * @param res Express Response 객체
+ * @param data 응답 데이터
+ * @param statusCode HTTP 상태 코드 (기본값: 200)
+ * @param count 데이터 항목 수 (목록 API에서 사용)
+ */
+export const sendResponse = <T>(
+  res: Response,
+  data: T,
+  statusCode: number = 200,
+  count?: number
+): void => {
+  sendSuccess(res, data, statusCode, count);
 };
 
 /**
@@ -43,10 +59,10 @@ export const sendError = (
   res: Response,
   error: string | string[],
   statusCode: number = 500
-): Response<ApiResponse<null>> => {
-  return res.status(statusCode).json({
+): void => {
+  res.status(statusCode).json({
     success: false,
-    error
+    error,
   });
 };
 
@@ -55,7 +71,7 @@ export const sendError = (
  * @param res Express Response 객체
  * @param error Mongoose ValidationError 객체
  */
-export const handleValidationError = (res: Response, error: any): Response<ApiResponse<null>> => {
+export const handleValidationError = (res: Response, error: any): void => {
   const messages = Object.values(error.errors).map((val: any) => val.message);
-  return sendError(res, messages, 400);
+  sendError(res, messages, 400);
 };

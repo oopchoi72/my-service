@@ -40,9 +40,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
     return allEvents.filter((event) => {
       const eventDate = new Date(event.startDateTime);
-      return (
-        isSameMonth(eventDate, date) && isSameYear(eventDate, date)
-      );
+      return isSameMonth(eventDate, date) && isSameYear(eventDate, date);
     });
   }, []);
 
@@ -66,21 +64,28 @@ const Calendar: React.FC<CalendarProps> = ({
     setCurrentDate(addMonths(currentDate, 1));
   };
 
-  // 오늘 날짜로 이동
-  const handleToday = () => {
+  // 오늘로 이동
+  const goToToday = () => {
     setCurrentDate(startOfMonth(new Date()));
+  };
+
+  // 날짜 직접 변경
+  const handleDateChange = (date: Date) => {
+    setCurrentDate(startOfMonth(date));
   };
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden ${className}`}
+      className={`calendar-container bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 ${className}`}
       {...props}
     >
       <CalendarHeader
         currentDate={currentDate}
         onPrevMonth={handlePrevMonth}
         onNextMonth={handleNextMonth}
-        onToday={handleToday}
+        onToday={goToToday}
+        onDateChange={handleDateChange}
+        className="bg-white dark:bg-gray-800 px-2 sm:px-4 py-2 sm:py-3 border-b border-gray-200 dark:border-gray-700"
       />
       <CalendarGrid
         currentDate={currentDate}
@@ -88,6 +93,7 @@ const Calendar: React.FC<CalendarProps> = ({
         onDateClick={onDateClick}
         onEventClick={onEventClick}
         maxEventsPerDay={maxEventsPerDay}
+        className="p-1 sm:p-2"
       />
     </div>
   );

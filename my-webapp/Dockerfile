@@ -3,6 +3,8 @@ FROM node:18 as development
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
+# react-scripts 버전 문제 해결
+RUN npm install react-scripts@4.0.3
 COPY . .
 EXPOSE 3000
 CMD ["npm", "start"]

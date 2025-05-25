@@ -12,6 +12,7 @@ interface EventModalProps extends BaseProps {
   onDelete?: () => void;
   isSaving?: boolean;
   isDeleting?: boolean;
+  selectedDate?: Date; // 달력에서 선택된 날짜
 }
 
 /**
@@ -28,6 +29,7 @@ const EventModal: React.FC<EventModalProps> = ({
   isSaving = false,
   isDeleting = false,
   className = "",
+  selectedDate,
   ...props
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
@@ -198,6 +200,7 @@ const EventModal: React.FC<EventModalProps> = ({
               onSave={onSave}
               onCancel={onClose}
               isSaving={isSaving}
+              selectedDate={selectedDate}
             />
           )}
         </div>
@@ -346,14 +349,25 @@ const EventForm: React.FC<{
   onSave?: (data: CreateEventDto | UpdateEventDto) => void;
   onCancel: () => void;
   isSaving?: boolean;
-}> = ({ event, mode, onSave, onCancel, isSaving = false }) => {
+  selectedDate?: Date;
+}> = ({ event, mode, onSave, onCancel, isSaving = false, selectedDate }) => {
   // 폼 상태 관리
   const [title, setTitle] = useState(event?.title || "");
-  const [startDateTime, setStartDateTime] = useState(
-    event?.startDateTime
-      ? format(new Date(event.startDateTime), "yyyy-MM-dd'T'HH:mm")
-      : format(new Date(), "yyyy-MM-dd'T'HH:mm")
-  );
+  const [startDateTime, setStartDateTime] = useState(() => {
+    if (event?.startDateTime) {
+      // 수정 모드일 때는 기존 이벤트의 시작일시 사용
+      return format(new Date(event.startDateTime), "yyyy-MM-dd'T'HH:mm");
+    } else if (selectedDate) {
+      // 새 일정 생성시 선택된 날짜 사용 (시간은 현재 시간으로 설정)
+      const now = new Date();
+      const selectedDateTime = new Date(selectedDate);
+      selectedDateTime.setHours(now.getHours(), now.getMinutes());
+      return format(selectedDateTime, "yyyy-MM-dd'T'HH:mm");
+    } else {
+      // 기본값: 현재 날짜와 시간
+      return format(new Date(), "yyyy-MM-dd'T'HH:mm");
+    }
+  });
   const [endDateTime, setEndDateTime] = useState(
     event?.endDateTime
       ? format(new Date(event.endDateTime), "yyyy-MM-dd'T'HH:mm")
@@ -491,11 +505,11 @@ const EventForm: React.FC<{
       // 날짜 형식을 ISO 문자열로 변환
       const startDateObj = new Date(startDateTime);
       let endDateObj: Date | undefined = undefined;
-      
+
       if (endDateTime) {
         endDateObj = new Date(endDateTime);
       }
-      
+
       const formData: CreateEventDto | UpdateEventDto = {
         title,
         startDateTime: startDateObj.toISOString(), // ISO 문자열로 변환

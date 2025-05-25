@@ -226,6 +226,7 @@ function App() {
           onDelete={handleConfirmDelete}
           isSaving={isMutating}
           isDeleting={isMutating}
+          selectedDate={modalState.selectedDate}
         />
 
         {/* 이벤트 상세 모달 */}

@@ -60,7 +60,8 @@ export const getEventById = async (
     const event = await Event.findById(req.params.id);
 
     if (!event) {
-      return sendError(res, "해당 ID의 일정을 찾을 수 없습니다", 404);
+      sendError(res, "해당 ID의 일정을 찾을 수 없습니다", 404);
+      return;
     }
 
     sendResponse(res, event);
@@ -83,15 +84,17 @@ export const createEvent = async (
     if (req.body.startDateTime) {
       const startDate = new Date(req.body.startDateTime);
       if (isNaN(startDate.getTime())) {
-        return sendError(res, "올바르지 않은 시작 일시 형식입니다", 400);
+        sendError(res, "올바르지 않은 시작 일시 형식입니다", 400);
+        return;
       }
       req.body.startDateTime = startDate;
     }
-    
+
     if (req.body.endDateTime) {
       const endDate = new Date(req.body.endDateTime);
       if (isNaN(endDate.getTime())) {
-        return sendError(res, "올바르지 않은 종료 일시 형식입니다", 400);
+        sendError(res, "올바르지 않은 종료 일시 형식입니다", 400);
+        return;
       }
       req.body.endDateTime = endDate;
     }
@@ -118,15 +121,17 @@ export const updateEvent = async (
     if (req.body.startDateTime) {
       const startDate = new Date(req.body.startDateTime);
       if (isNaN(startDate.getTime())) {
-        return sendError(res, "올바르지 않은 시작 일시 형식입니다", 400);
+        sendError(res, "올바르지 않은 시작 일시 형식입니다", 400);
+        return;
       }
       req.body.startDateTime = startDate;
     }
-    
+
     if (req.body.endDateTime) {
       const endDate = new Date(req.body.endDateTime);
       if (isNaN(endDate.getTime())) {
-        return sendError(res, "올바르지 않은 종료 일시 형식입니다", 400);
+        sendError(res, "올바르지 않은 종료 일시 형식입니다", 400);
+        return;
       }
       req.body.endDateTime = endDate;
     }
@@ -138,7 +143,8 @@ export const updateEvent = async (
     );
 
     if (!updatedEvent) {
-      return sendError(res, "해당 ID의 일정을 찾을 수 없습니다", 404);
+      sendError(res, "해당 ID의 일정을 찾을 수 없습니다", 404);
+      return;
     }
 
     sendResponse(res, updatedEvent);
@@ -160,10 +166,18 @@ export const deleteEvent = async (
     const deletedEvent = await Event.findByIdAndDelete(req.params.id);
 
     if (!deletedEvent) {
-      return sendError(res, "해당 ID의 일정을 찾을 수 없습니다", 404);
+      sendError(res, "해당 ID의 일정을 찾을 수 없습니다", 404);
+      return;
     }
 
-    sendResponse(res, null, 204);
+    sendResponse(
+      res,
+      {
+        message: "일정이 성공적으로 삭제되었습니다",
+        id: req.params.id,
+      },
+      200
+    );
   } catch (error) {
     next(error);
   }
